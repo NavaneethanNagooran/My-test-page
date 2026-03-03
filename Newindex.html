@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timesheet & Leave Tracker — Navaneethan Nagooran</title>
+  <style>
+    /* ---------- THEME ----------
+       Toggle dark/light by switching [data-theme] on <html>.
+    --------------------------------*/
+    :root{
+      --bg:#0f172a; --panel:#111827; --text:#e5e7eb; --muted:#9ca3af;
+      --line:#263244; --card:#1f2937; --brand:#22c55e;
+      --ok:#14532d; --ok-t:#dcfce7;
+      --warn:#78350f; --warn-t:#fde68a;
+      --danger:#7f1d1d; --danger-t:#fecaca;
+      --link:#60a5fa; --chip:#0d1f36;
+      --white:#ffffff;
+    }
+    html[data-theme="light"]{
+      --bg:#f8fafc; --panel:#ffffff; --text:#0f172a; --muted:#475569;
+      --line:#cbd5e1; --card:#ffffff; --brand:#16a34a;
+      --ok:#e6f4ea; --ok-t:#065f46;
+      --warn:#fff4db; --warn-t:#7c4b00;
+      --danger:#ffe6e6; --danger-t:#7a0d0d;
+      --link:#0b62e5; --chip:#eef2ff;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    a{color:var(--link); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    header{
+      position:sticky; top:0; z-index:10;
+      background:var(--panel); border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:1rem}
+    .row{display:flex; gap:.75rem; align-items:center; flex-wrap:wrap}
+    .spacer{flex:1}
+
+    h1{margin:.2rem 0 .4rem; font-size:clamp(1.25rem,2.2vw,1.75rem)}
+    .sub{margin:0; color:var(--muted)}
+    .badge{background:#08334420; color:#86efac; border:1px solid #14532d; padding:.2rem .5rem; border-radius:.5rem; font-weight:600}
+
+    input[type=text], input[type=number], select, textarea{
+      background:var(--card); color:var(--text);
+      border:1px solid var(--line); border-radius:.6rem; padding:.5rem .6rem;
+      outline:none; width:100%;
+    }
+    textarea{min-height:90px; resize:vertical}
+
+    button{
+      background:var(--card); color:var(--text);
+      border:1px solid var(--line); border-radius:.6rem;
+      padding:.5rem .8rem; font-weight:600; cursor:pointer;
+    }
+    button.primary{background:var(--brand); border-color:#16a34a; color:#052e16}
+    button:hover{filter:brightness(1.05)}
+    .toolbar .row{gap:.5rem}
+
+    .panel{
+      background:var(--panel); border:1px solid var(--line);
+      border-radius:.8rem; padding:1rem; margin:.9rem 0;
+    }
+
+    /* Table */
+    .grid{overflow:auto; border:1px solid var(--line); border-radius:.8rem; background:var(--card)}
+    table{width:100%; border-collapse:collapse; min-width:860px}
+    thead th{background:var(--panel); position:sticky; top:140px; z-index:5;
+      text-align:left; padding:.7rem; border-bottom:1px solid var(--line); color:var(--muted)}
+    tbody td{padding:.55rem; border-bottom:1px dashed var(--line)}
+    tbody tr:hover{background:rgba(148,163,184,.08)}
+    .note{color:var(--muted); font-size:.9rem}
+    .chip{display:inline-block; padding:.35rem .6rem; border:1px solid var(--line); border-radius:999px; background:var(--chip); margin-right:.4rem}
+    .ok{background:var(--ok); color:var(--ok-t)}
+    .warn{background:var(--warn); color:var(--warn-t)}
+    .danger{background:var(--danger); color:var(--danger-t)}
+    .hidden{display:none !important}
+    .right{justify-content:flex-end}
+
+    /* Print */
+    @media print{
+      header, .no-print{display:none !important}
+      body{background:#ffffff; color:#000}
+      .panel, .grid{border-color:#999}
+      thead th{top:0 !important; background:#fff; color:#000}
+      a{color:#000}
+    }
+
+    footer{
+      text-align:center; color:var(--muted);
+      border-top:1px solid var(--line);
+      padding:1.2rem .75rem 2rem;
+    }
+    .owner{margin-top:.4rem; color:#a7f3d0}
+    html[data-theme="light"] .owner{color:#155e75}
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="wrap">
+      <div class="row">
+        <div>
+          <h1>Timesheet & Leave Tracker <span class="badge">Max 8 hrs/day • 40 hrs/week</span></h1>
+          <p class="sub">Submit timesheets, manage leave balances (Casual, Sick, PTO), and auto‑apply India holidays.</p>
+        </div>
+        <div class="spacer"></div>
+        <div class="row no-print">
+          <label for="themeSel" class="note">Theme</label>
+          <select id="themeSel" title="Toggle theme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+          <button id="printBtn" title="Print / Save PDF">🖨 Print</button>
+        </div>
+      </div>
+
+      <!-- Role + Profile -->
+      <div class="panel">
+        <div class="row">
+          <label class="note" for="userName">User</label>
+          <input id="userName" type="text" placeholder="Your name (e.g., Navaneethan)" />
+          <label class="note" for="regionSel">Region</label>
+          <select id="regionSel">
+            <option value="IN">India (National)</option>
+            <option value="IN-TN" selected>India — Tamil Nadu</option>
+            <option value="CUSTOM">Custom (edit below)</option>
+          </select>
+          <label class="note" for="roleSel">Role</label>
+          <select id="roleSel" title="Switch role">
+            <option>User</option>
+            <option>Manager</option>
+          </select>
+          <div class="spacer"></div>
+          <div class="row right">
+            <button id="prevWeek">◀ Prev Week</button>
+            <div id="weekLabel" class="note" style="min-width:210px;text-align:center">Week</div>
+            <button id="nextWeek">Next Week ▶</button>
+          </div>
+        </div>
+        <div class="row note">
+          Data is saved locally per <strong>User</strong> + <strong>Week</strong>. For team use, enable Google Sheets sync (see Settings).
+        </div>
+      </div>
+
+      <!-- Balances -->
+      <div class="panel" id="balancePanel">
+        <div class="row">
+          <strong>Leave Balances (yearly, with carry‑forward)</strong>
+          <div class="spacer"></div>
+          <label class="note" for="yearSel">Year</label>
+          <select id="yearSel"></select>
+          <button id="recalcCarry" title="Recalculate from previous year">↺ Recalc Carry‑forward</button>
+        </div>
+        <div class="row" style="margin-top:.6rem">
+          <div style="min-width:200px">
+            <label>Annual Casual (days)</label>
+            <input id="entCasual" type="number" min="0" step=".5" value="6">
+          </div>
+          <div style="min-width:200px">
+            <label>Annual Sick (days)</label>
+            <input id="entSick" type="number" min="0" step=".5" value="6">
+          </div>
+          <div style="min-width:200px">
+            <label>Annual PTO (days)</label>
+            <input id="entPTO" type="number" min="0" step=".5" value="12">
+          </div>
+          <div style="min-width:240px">
+            <label>Carry‑forward Cap (days)</label>
+            <input id="carryCap" type="number" min="0" step=".5" value="5">
+          </div>
+          <div class="spacer"></div>
+          <div>
+            <div class="chip" id="balCasual">Casual: 0</div>
+            <div class="chip" id="balSick">Sick: 0</div>
+            <div class="chip" id="balPTO">PTO: 0</div>
+          </div>
+        </div>
+        <p class="note">Balances auto‑update as you mark leave. At year change, unused balances carry forward up to the set cap (applies to PTO by default; adjust as needed).</p>
+      </div>
+
+      <!-- Manager Panel -->
+      <div id="managerPanel" class="panel hidden">
+        <strong>Manager Approvals</strong>
+        <p class="note">View weeks submitted by this browser’s users. For multi‑user teams, enable Google Sheets sync below.</p>
+        <div id="approvalList"></div>
+      </div>
+
+      <!-- Settings -->
+      <div class="panel">
+        <details>
+          <summary><strong>Settings & Integrations</strong></summary>
+          <div class="row" style="margin-top:.6rem">
+            <div style="flex:1; min-width:260px">
+              <label>Public Holidays (JSON, yyyy-mm-dd → label)</label>
+              <textarea id="customHolidays" placeholder='{"2026-01-26":"Republic Day","2026-08-15":"Independence Day"}'></textarea>
+            </div>
+            <div style="flex:1; min-width:260px">
+              <label>Google Sheets Webhook URL (Apps Script)</label>
+              <input id="webhookUrl" type="text" placeholder="https://script.google.com/macros/s/WEBAPP_ID/exec" />
+              <div class="row" style="margin-top:.5rem">
+                <button id="syncNow">Sync Current Week → Sheets</button>
+                <button id="syncAll">Sync All Weeks → Sheets</button>
+              </div>
+              <p class="note">Leave blank to keep everything local. When set, JSON payloads are POSTed for central storage/approval.</p>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="wrap">
+    <section class="grid">
+      <table aria-describedby="tableHelp">
+        <thead>
+          <tr>
+            <th style="width:18%">Date / Day</th>
+            <th style="width:16%">Leave</th>
+            <th style="width:12%">Hours (0–8)</th>
+            <th>Task / Notes</th>
+            <th style="width:16%">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5">
+              <div id="totalsBar"></div>
+              <div id="submitBar" class="row no-print" style="margin-top:.6rem">
+                <button id="submitWeek" class="primary">Submit for Approval</button>
+                <div class="spacer"></div>
+                <div id="statusBadge" class="chip">Status: Draft</div>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+    <p id="tableHelp" class="note">Rules: max <strong>8 hrs/day</strong> and <strong>40 hrs/week</strong>. Public holidays are enforced (hours auto‑set to 0 and marked “Holiday”).</p>
+    <p id="errorBar" class="danger hidden" style="padding:.6rem;border-radius:.6rem">Error</p>
+    <div class="row no-print" style="margin:.8rem 0">
+      <button id="clearWeek">Clear This Week</button>
+      <button id="exportCsv">Export CSV</button>
+    </div>
+  </main>
+
+  <footer>
+    <div>Data is stored locally (unless Sheets sync is enabled). Customize holidays and annual entitlements in Settings.</div>
+    <div class="owner"><strong>Site Owner:</strong> Navaneethan Nagooran</div>
+  </footer>
+
+  <script>
+  /* ==============================
+     UTILITIES
+  =============================== */
+  const pad = n => String(n).padStart(2,'0');
+  const fmtDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const parseDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); }
+  const dayName = i => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i];
+  const WEEK_MS = 7*24*3600*1000;
+
+  function mondayOf(date){
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const day = (d.getDay()+6)%7; // 0=Mon
+    d.setDate(d.getDate()-day);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function clampHours(h, cap=8){
+    if (isNaN(h) || h < 0) return 0;
+    return Math.min(cap, Math.round(h*4)/4);
+  }
+
+  function csvEscape(v){
+    if (v==null) return '';
+    const s = String(v);
+    return /[\",\\n]/.test(s) ? `"${s.replace(/\"/g,'\"\"')}"` : s;
+  }
+
+  function keyUser(){ return (document.getElementById('userName').value || 'User').trim(); }
+  function keyWeek(ws){ return `${fmtDate(ws)}`; }
+  function storeKey(ws){ return `ts.user.${keyUser()}.week.${keyWeek(ws)}`; }
+  function balanceKey(year){ return `ts.user.${keyUser()}.balances.${year}`; }
+  function metaKey(){ return `ts.user.${keyUser()}.meta`; }
+
+  /* ==============================
+     DEFAULT HOLIDAYS (editable)
+     - National common (IN)
+     - Tamil Nadu sample (fixed-date only; add variable festivals via Settings)
+  =============================== */
+  function holidaySeed(year){
+    const base = {
+      [`${year}-01-26`]:'Republic Day',
+      [`${year}-08-15`]:'Independence Day',
+      [`${year}-10-02`]:'Gandhi Jayanti'
+    };
+    return base;
+  }
+  function holidaySeedTN(year){
+    return Object.assign(holidaySeed(year), {
+      [`${year}-01-15`]:'Pongal',
+      [`${year}-01-16`]:'Thiruvalluvar Day',
+      [`${year}-01-17`]:'Uzhavar Thirunal',
+      [`${year}-04-14`]:'Tamil New Year'
+      // Add movable festivals (e.g., Deepavali) via Settings → Custom Holidays
+    });
+  }
+
+  /* ==============================
+     GLOBAL STATE
+  =============================== */
+  const tbody = document.getElementById('tbody');
+  const totalsBar = document.getElementById('totalsBar');
+  const errorBar = document.getElementById('errorBar');
+  const weekLabel = document.getElementById('weekLabel');
+  const statusBadge = document.getElementById('statusBadge');
+  const regionSel = document.getElementById('regionSel');
+  const yearSel = document.getElementById('yearSel');
+  const entCasual = document.getElementById('entCasual');
+  const entSick = document.getElementById('entSick');
+  const entPTO = document.getElementById('entPTO');
+  const carryCap = document.getElementById('carryCap');
+  const balCasual = document.getElementById('balCasual');
+  const balSick = document.getElementById('balSick');
+  const balPTO = document.getElementById('balPTO');
+  const customHolidays = document.getElementById('customHolidays');
+  const managerPanel = document.getElementById('managerPanel');
+  const approvalList = document.getElementById('approvalList');
+
+  let currentWeek = mondayOf(new Date());
+
+  const leaveOptions = [
+    {value:'none', label:'None'},
+    {value:'casual_half', label:'Casual Half (0.5d)'},
+    {value:'casual_full', label:'Casual Full (1d)'},
+    {value:'sick_half', label:'Sick Half (0.5d)'},
+    {value:'sick_full', label:'Sick Full (1d)'},
+    {value:'pto_half', label:'PTO Half (0.5d)'},
+    {value:'pto_full', label:'PTO Full (1d)'},
+    {value:'holiday', label:'Holiday (auto)'}
+  ];
+
+  function leaveToType(leave){
+    if (leave.startsWith('casual')) return 'Casual';
+    if (leave.startsWith('sick')) return 'Sick';
+    if (leave.startsWith('pto')) return 'PTO';
+    return null;
+  }
+  function leaveUnits(leave){
+    if (/_half$/.test(leave)) return 0.5;
+    if (/_full$/.test(leave)) return 1;
+    return 0;
+  }
+
+  /* ==============================
+     PERSISTENCE HELPERS
+  =============================== */
+  function loadWeek(ws){
+    const raw = localStorage.getItem(storeKey(ws));
+    if (raw){
+      try { return JSON.parse(raw); } catch(e){}
+    }
+    // create default week
+    const rows = [];
+    for (let i=0;i<7;i++){
+      const d = new Date(ws.getTime()+i*24*3600*1000);
+      rows.push({date:fmtDate(d), day:dayName(i), leave:'none', hours:0, notes:''});
+    }
+    const meta = {status:'Draft', managerComment:''};
+    return {rows, meta};
+  }
+
+  function saveWeek(ws, data){
+    localStorage.setItem(storeKey(ws), JSON.stringify(data));
+  }
+
+  function loadBalances(year){
+    const raw = localStorage.getItem(balanceKey(year));
+    if (raw){
+      try { return JSON.parse(raw); } catch(e){}
+    }
+    const ent = {
+      casual: parseFloat(entCasual.value||0),
+      sick: parseFloat(entSick.value||0),
+      pto: parseFloat(entPTO.value||0),
+      carryCap: parseFloat(carryCap.value||0),
+      carriedFromPrev: 0
+    };
+    const used = {casual:0, sick:0, pto:0};
+    return {ent, used};
+  }
+
+  function saveBalances(year, obj){
+    localStorage.setItem(balanceKey(year), JSON.stringify(obj));
+  }
+
+  function setMeta(obj){
+    localStorage.setItem(metaKey(), JSON.stringify(obj));
+  }
+  function getMeta(){
+    const raw = localStorage.getItem(metaKey());
+    if (raw){ try { return JSON.parse(raw); } catch(e){} }
+    return {theme:'dark', webhookUrl:'', region:'IN-TN', customHolidays:{}};
+  }
+
+  /* ==============================
+     HOLIDAYS
+  =============================== */
+  function regionHolidays(year){
+    const meta = getMeta();
+    const region = (regionSel.value || meta.region || 'IN-TN');
+    const base = region==='IN-TN' ? holidaySeedTN(year) :
+                 region==='IN' ? holidaySeed(year) : {};
+    // merge with custom (settings)
+    let custom={};
+    try { custom = JSON.parse(customHolidays.value||'{}') } catch(e){ custom={} }
+    return Object.assign({}, base, custom);
+  }
+
+  function isHoliday(dateStr){
+    const y = parseInt(dateStr.substring(0,4),10);
+    const map = regionHolidays(y);
+    return map[dateStr] || null;
+  }
+
+  /* ==============================
+     RENDERING
+  =============================== */
+  function render(){
+    const ws = currentWeek;
+    const we = new Date(ws.getTime()+6*24*3600*1000);
+    weekLabel.textContent = `Week: ${fmtDate(ws)} → ${fmtDate(we)}`;
+    const data = loadWeek(ws);
+
+    // Role-driven panels
+    document.getElementById('submitBar').classList.toggle('hidden', document.getElementById('roleSel').value === 'Manager');
+    managerPanel.classList.toggle('hidden', document.getElementById('roleSel').value !== 'Manager');
+
+    tbody.innerHTML = '';
+    data.rows.forEach((row, idx) => {
+      // holiday enforcement
+      const hol = isHoliday(row.date);
+      if (hol){
+        row.leave = 'holiday';
+        row.hours = 0;
+      } else if (row.leave==='holiday'){
+        row.leave = 'none';
+      }
+
+      const tr = document.createElement('tr');
+
+      // Date / Day
+      const tdDate = document.createElement('td');
+      tdDate.textContent = `${row.date} (${row.day})`;
+      tr.appendChild(tdDate);
+
+      // Leave
+      const tdLeave = document.createElement('td');
+      const sel = document.createElement('select');
+      leaveOptions.forEach(opt => {
+        // prevent user editing "holiday"
+        if (opt.value==='holiday' && !hol) return;
+        const o = document.createElement('option');
+        o.value = opt.value; o.textContent = opt.label;
+        if (row.leave === opt.value) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.disabled = !!hol;
+      sel.addEventListener('change', ()=>{ row.leave = sel.value; if (row.leave.endsWith('full')) row.hours=0; if (row.leave.endsWith('half') && row.hours>4) row.hours=4; persist(false); });
+      tdLeave.appendChild(sel);
+      if (hol){
+        const hint = document.createElement('div'); hint.className='note'; hint.textContent = isHoliday(row.date);
+        tdLeave.appendChild(hint);
+      }
+      tr.appendChild(tdLeave);
+
+      // Hours
+      const tdHours = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.min='0'; inp.max='8'; inp.step='.25'; inp.value=row.hours;
+      inp.disabled = !!hol || data.meta.status==='Approved';
+      inp.addEventListener('input', ()=>{
+        let cap = 8;
+        if (row.leave.endsWith('full')) cap = 0;
+        if (row.leave.endsWith('half')) cap = 4;
+        row.hours = clampHours(parseFloat(inp.value), cap);
+        inp.value = row.hours;
+        persist(false);
+      });
+      tdHours.appendChild(inp);
+      tr.appendChild(tdHours);
+
+      // Notes
+      const tdNotes = document.createElement('td');
+      const notes = document.createElement('input'); notes.type='text'; notes.placeholder='Tasks, ticket IDs, remarks…'; notes.value=row.notes||'';
+      notes.disabled = data.meta.status==='Approved';
+      notes.addEventListener('input', ()=>{ row.notes = notes.value; persist(false); });
+      tdNotes.appendChild(notes);
+      tr.appendChild(tdNotes);
+
+      // Status
+      const tdStatus = document.createElement('td');
+      tdStatus.className='note';
+      if (hol) tdStatus.textContent='Holiday';
+      else if (row.leave.endsWith('full')) tdStatus.textContent='Full-day leave';
+      else if (row.leave.endsWith('half')) tdStatus.textContent='Half-day leave (max 4h work)';
+      else tdStatus.textContent = row.hours===0 ? 'No hours entered' : 'OK';
+      tr.appendChild(tdStatus);
+
+      tbody.appendChild(tr);
+    });
+
+    updateTotals();
+    updateStatusBadge(data.meta.status);
+    updateBalancesUI();
+    if (document.getElementById('roleSel').value==='Manager') renderManagerList();
+  }
+
+  function persist(hard=true){
+    const data = collect();
+    saveWeek(currentWeek, data);
+    hard ? render() : (updateTotals(), updateBalancesUI());
+  }
+
+  function collect(){
+    const rows = [];
+    [...tbody.rows].forEach((tr, i) => {
+      const [dateCell, leaveCell, hoursCell, notesCell] = tr.cells;
+      const date = dateCell.textContent.split(' (')[0];
+      const leave = leaveCell.querySelector('select').value;
+      const hours = clampHours(parseFloat(hoursCell.querySelector('input').value), leave.endsWith('half')?4:leave.endsWith('full')?0:8);
+      const notes = notesCell.querySelector('input').value || '';
+      rows.push({date, day:dayName(i), leave, hours, notes});
+    });
+    const meta = loadWeek(currentWeek).meta; // preserve status/comments
+    return {rows, meta};
+  }
+
+  function updateTotals(){
+    const d = collect();
+    let work = 0, leaveCasual=0, leaveSick=0, leavePTO=0;
+    d.rows.forEach(r=>{
+      if (r.leave==='holiday'){ work += 0; return; }
+      const cap = r.leave.endsWith('half') ? 4 : r.leave.endsWith('full') ? 0 : 8;
+      work += Math.min(r.hours, cap);
+      const t = leaveToType(r.leave);
+      const u = leaveUnits(r.leave);
+      if (t==='Casual') leaveCasual += u;
+      if (t==='Sick') leaveSick += u;
+      if (t==='PTO') leavePTO += u;
+    });
+
+    const weeklyCap = 40;
+    const remaining = Math.max(0, weeklyCap - work);
+
+    totalsBar.innerHTML='';
+    chip(`Work Hours: ${work.toFixed(2)}`, work>weeklyCap? 'danger':'ok');
+    chip(`Remaining (to 40h): ${remaining.toFixed(2)}`, remaining===0?'warn':'ok');
+    chip(`Casual leave: ${leaveCasual}`, '');
+    chip(`Sick leave: ${leaveSick}`, '');
+    chip(`PTO leave: ${leavePTO}`, '');
+  }
+
+  function chip(text, cls){
+    const span = document.createElement('span');
+    span.className = `chip ${cls||''}`;
+    span.textContent = text;
+    totalsBar.appendChild(span);
+  }
+
+  function updateStatusBadge(status){
+    statusBadge.textContent = `Status: ${status}`;
+    statusBadge.className='chip ' + (status==='Approved' ? 'ok' : status==='Rejected' ? 'danger' : 'warn');
+  }
+
+  /* ==============================
+     BALANCES + CARRY-FORWARD
+  =============================== */
+  function yearFromWeek(){ return currentWeek.getFullYear(); }
+
+  function recalcBalancesForYear(year){
+    // Entitlements & carry-forward
+    const settingsEnt = {
+      casual: parseFloat(entCasual.value||0),
+      sick: parseFloat(entSick.value||0),
+      pto: parseFloat(entPTO.value||0),
+      carryCap: parseFloat(carryCap.value||0)
+    };
+    const prev = loadBalances(year-1);
+    const prevLeft = Math.max(0, (prev.ent.pto + (prev.ent.carriedFromPrev||0)) - prev.used.pto);
+    const carry = Math.min(settingsEnt.carryCap, prevLeft);
+
+    const cur = loadBalances(year);
+    cur.ent = Object.assign({}, settingsEnt, {carriedFromPrev: carry});
+    cur.used = computeUsedLeaveDays(year);
+    saveBalances(year, cur);
+  }
+
+  function computeUsedLeaveDays(year){
+    // iterate all weeks in year in storage (for this user)
+    const used = {casual:0, sick:0, pto:0};
+    for (let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      const prefix = `ts.user.${keyUser()}.week.`;
+      if (k.startsWith(prefix)){
+        const dateStr = k.slice(prefix.length, prefix.length+10);
+        if (dateStr.startsWith(String(year))){
+          try{
+            const obj = JSON.parse(localStorage.getItem(k));
+            (obj.rows||[]).forEach(r=>{
+              const t = leaveToType(r.leave);
+              const u = leaveUnits(r.leave);
+              if (t==='Casual') used.casual += u;
+              if (t==='Sick') used.sick += u;
+              if (t==='PTO') used.pto += u;
+            });
+          }catch(e){}
+        }
+      }
+    }
+    return used;
+  }
+
+  function updateBalancesUI(){
+    const yr = parseInt(yearSel.value,10);
+    const b = loadBalances(yr);
+    const ptoAvail = (b.ent.pto + (b.ent.carriedFromPrev||0)) - b.used.pto;
+    balCasual.textContent = `Casual: used ${b.used.casual} / ${b.ent.casual}`;
+    balSick.textContent   = `Sick: used ${b.used.sick} / ${b.ent.sick}`;
+    balPTO.textContent    = `PTO: used ${b.used.pto} / total ${(b.ent.pto + (b.ent.carriedFromPrev||0))} (avail ${Math.max(0, ptoAvail).toFixed(1)})`;
+  }
+
+  /* ==============================
+     APPROVAL WORKFLOW (LOCAL)
+  =============================== */
+  function submitForApproval(){
+    const pack = loadWeek(currentWeek);
+    if (pack.meta.status==='Approved'){
+      alert('Week already approved.');
+      return;
+    }
+    // basic validation: weekly cap
+    const tmp = collect();
+    let total=0, invalid=false, msg='';
+    tmp.rows.forEach(r=>{
+      const cap = r.leave.endsWith('full') ? 0 : r.leave.endsWith('half') ? 4 : 8;
+      if (r.hours > cap+1e-9){ invalid=true; msg=`Daily limit exceeded on ${r.date}.`; }
+      total += Math.min(r.hours, cap);
+    });
+    if (invalid){ alert(msg); return; }
+    if (total > 40+1e-9){ alert(`Weekly limit exceeded: ${total.toFixed(2)}h`); return; }
+
+    pack.meta.status = 'Pending';
+    saveWeek(currentWeek, {rows:tmp.rows, meta:pack.meta});
+    updateStatusBadge('Pending');
+    renderManagerList(); // refresh manager view
+  }
+
+  function renderManagerList(){
+    // list all pending/non-draft weeks for all local users
+    approvalList.innerHTML='';
+    const items = [];
+    for (let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      const m = k.match(/^ts\.user\.(.+)\.week\.(\\d{4}-\\d{2}-\\d{2})/);
+      if (m){
+        try{
+          const obj = JSON.parse(localStorage.getItem(k));
+          if (obj && obj.meta && (obj.meta.status==='Pending' || obj.meta.status==='Rejected' || obj.meta.status==='Approved')){
+            items.push({user: decodeURIComponent(m[1]), week:m[2], status:obj.meta.status});
+          }
+        }catch(e){}
+      }
+    }
+    items.sort((a,b)=> a.week.localeCompare(b.week));
+    if (items.length===0){ approvalList.innerHTML = '<p class="note">No submitted weeks found.</p>'; return; }
+
+    items.forEach(it=>{
+      const key = `ts.user.${it.user}.week.${it.week}`;
+      const data = JSON.parse(localStorage.getItem(key));
+      const div = document.createElement('div');
+      div.className='panel';
+      div.innerHTML = `
+        <div class="row">
+          <strong>${it.user}</strong>
+          <span class="chip">Week ${it.week}</span>
+          <span class="chip ${it.status==='Approved'?'ok':it.status==='Rejected'?'danger':'warn'}">Status: ${it.status}</span>
+          <div class="spacer"></div>
+          <button data-act="open">Open</button>
+        </div>
+        <div class="note" style="margin-top:.4rem">Hours summary and leave breakdown shown when opened.</div>
+        <div class="hidden" data-body>
+          <div style="margin-top:.6rem"></div>
+          <div data-summary class="note"></div>
+          <div class="row" style="margin-top:.6rem">
+            <textarea data-comment placeholder="Manager comment…">${data.meta.managerComment||''}</textarea>
+          </div>
+          <div class="row" style="margin-top:.6rem">
+            <button data-act="approve" class="primary">Approve</button>
+            <button data-act="reject">Reject</button>
+            <button data-act="reset">Reset to Draft</button>
+          </div>
+        </div>
+      `;
+      const body = div.querySelector('[data-body]');
+      const openBtn = div.querySelector('[data-act="open"]');
+      const comment = div.querySelector('[data-comment"]') || div.querySelector('textarea');
+      const summary = div.querySelector('[data-summary]');
+
+      openBtn.addEventListener('click', ()=>{
+        body.classList.toggle('hidden');
+        // compute summary
+        const res = (() => {
+          let work=0, c=0, s=0, p=0;
+          (data.rows||[]).forEach(r=>{
+            const cap = r.leave.endsWith('full')?0:r.leave.endsWith('half')?4:8;
+            work += Math.min(r.hours, cap);
+            const t=leaveToType(r.leave), u=leaveUnits(r.leave);
+            if (t==='Casual') c+=u; if(t==='Sick') s+=u; if(t==='PTO') p+=u;
+          });
+          return {work, c, s, p};
+        })();
+        summary.textContent = `Totals → Work: ${res.work.toFixed(2)}h, Casual: ${res.c}d, Sick: ${res.s}d, PTO: ${res.p}d`;
+      });
+
+      div.querySelector('[data-act="approve"]').addEventListener('click', ()=>{
+        data.meta.status='Approved';
+        data.meta.managerComment = div.querySelector('textarea').value || '';
+        localStorage.setItem(key, JSON.stringify(data));
+        render(); // refresh views
+      });
+      div.querySelector('[data-act="reject"]').addEventListener('click', ()=>{
+        data.meta.status='Rejected';
+        data.meta.managerComment = div.querySelector('textarea').value || '';
+        localStorage.setItem(key, JSON.stringify(data));
+        render();
+      });
+      div.querySelector('[data-act="reset"]').addEventListener('click', ()=>{
+        data.meta.status='Draft';
+        localStorage.setItem(key, JSON.stringify(data));
+        render();
+      });
+
+      approvalList.appendChild(div);
+    });
+  }
+
+  /* ==============================
+     EXPORT / SYNC
+  =============================== */
+  function exportCsv(){
+    const pack = collect();
+    const header = ['User','WeekStart','Date','Day','Leave','Hours','Notes','Status'];
+    const rows = pack.rows.map(r=>[
+      keyUser(), fmtDate(currentWeek), r.date, r.day, r.leave, r.hours, r.notes, loadWeek(currentWeek).meta.status
+    ].map(csvEscape).join(','));
+    const csv = [header.join(','), ...rows].join('\\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `timesheet_${keyUser()}_${fmtDate(currentWeek)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  async function sync(weeks){
+    const url = (document.getElementById('webhookUrl').value || '').trim();
+    if (!url){ alert('Please set the Google Sheets Webhook URL in Settings.'); return; }
+    const payload = weeks.map(ws=>{
+      const k = storeKey(ws);
+      const pack = JSON.parse(localStorage.getItem(k));
+      return { user:keyUser(), weekStart:fmtDate(ws), ...pack };
+    });
+    try{
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      if (!res.ok) throw new Error(await res.text());
+      alert('Sync complete.');
+    }catch(err){
+      alert('Sync failed: ' + err.message);
+    }
+  }
+
+  /* ==============================
+     INIT + EVENTS
+  =============================== */
+  function initYears(){
+    const y = new Date().getFullYear();
+    yearSel.innerHTML='';
+    for (let i=y-1;i<=y+1;i++){
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = String(i);
+      if (i===y) opt.selected = true;
+      yearSel.appendChild(opt);
+    }
+  }
+
+  function loadMetaToUI(){
+    const m = getMeta();
+    document.documentElement.setAttribute('data-theme', m.theme||'dark');
+    document.getElementById('themeSel').value = m.theme||'dark';
+    document.getElementById('regionSel').value = m.region||'IN-TN';
+    document.getElementById('webhookUrl').value = m.webhookUrl||'';
+    customHolidays.value = JSON.stringify(m.customHolidays||{}, null, 2);
+  }
+
+  function saveMetaFromUI(){
+    const m = {
+      theme: document.getElementById('themeSel').value,
+      region: document.getElementById('regionSel').value,
+      webhookUrl: document.getElementById('webhookUrl').value.trim(),
+      customHolidays: (()=>{
+        try{ return JSON.parse(customHolidays.value||'{}'); }catch(e){ return {}; }
+      })()
+    };
+    setMeta(m);
+  }
+
+  // Buttons & inputs
+  document.getElementById('prevWeek').addEventListener('click', ()=>{ currentWeek = new Date(currentWeek.getTime()-WEEK_MS); render(); });
+  document.getElementById('nextWeek').addEventListener('click', ()=>{ currentWeek = new Date(currentWeek.getTime()+WEEK_MS); render(); });
+  document.getElementById('clearWeek').addEventListener('click', ()=>{
+    if (confirm('Clear all entries for this week?')){
+      localStorage.removeItem(storeKey(currentWeek));
+      render();
+    }
+  });
+  document.getElementById('exportCsv').addEventListener('click', exportCsv);
+  document.getElementById('submitWeek').addEventListener('click', submitForApproval);
+  document.getElementById('roleSel').addEventListener('change', ()=> render());
+  document.getElementById('themeSel').addEventListener('change', ()=>{ saveMetaFromUI(); document.documentElement.setAttribute('data-theme', document.getElementById('themeSel').value); });
+  document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+
+  regionSel.addEventListener('change', ()=>{ saveMetaFromUI(); render(); });
+  customHolidays.addEventListener('input', ()=>{ saveMetaFromUI(); render(); });
+
+  ['entCasual','entSick','entPTO','carryCap','userName'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', ()=>{ recalcBalancesForYear(parseInt(yearSel.value,10)); updateBalancesUI(); });
+  });
+  yearSel.addEventListener('change', ()=>{ recalcBalancesForYear(parseInt(yearSel.value,10)); updateBalancesUI(); });
+  document.getElementById('recalcCarry').addEventListener('click', ()=>{ recalcBalancesForYear(parseInt(yearSel.value,10)); updateBalancesUI(); });
+
+  document.getElementById('syncNow').addEventListener('click', ()=> sync([currentWeek]));
+  document.getElementById('syncAll').addEventListener('click', ()=>{
+    // find all week keys for this user
+    const weeks=[];
+    for (let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      const prefix = `ts.user.${keyUser()}.week.`;
+      if (k.startsWith(prefix)){
+        weeks.push(parseDate(k.slice(prefix.length, prefix.length+10)));
+      }
+    }
+    sync(weeks);
+  });
+
+  // First render
+  initYears();
+  loadMetaToUI();
+  recalcBalancesForYear(yearFromWeek());
+  render();
+  </script>
+</body>
+</html>

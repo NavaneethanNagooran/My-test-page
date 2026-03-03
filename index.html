@@ -1,364 +1,260 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Top Job Search Portals</title>
-
-  <!-- Optional icon set (Font Awesome) -->
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    rel="stylesheet"
-    integrity="sha512-Sl5v+Y0t8t0g+Q0Z0l+YH8f4n1o0oXQyq0JY3w1T0lSg9oIuW0d0wQYkq7+qk0Jm1s0k9w=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
-
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LKG Rhymes – Teacher Cat Edition</title>
   <style>
     :root{
-      --bg: #0f172a;          /* slate-900 */
-      --panel: #111827;       /* gray-900 */
-      --muted: #94a3b8;       /* slate-400 */
-      --text: #e5e7eb;        /* gray-200 */
-      --brand: #22c55e;       /* green-500 */
-      --card: #1f2937;        /* gray-800 */
-      --card-hover: #374151;  /* gray-700 */
-      --chip: #0ea5e9;        /* sky-500 */
-      --focus: #60a5fa;       /* blue-400 */
+      --bg:#fff7e9;--card:#fff;--primary:#6c5ce7;--accent:#00b894;--accent2:#fdcb6e;--text:#2d3436;--muted:#636e72;--shadow:0 8px 20px rgba(0,0,0,.08);--radius:18px
     }
+    html,body{height:100%;background:radial-gradient(1200px 600px at 10% 0%,#ffe9d6,var(--bg)) no-repeat;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans","Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--text);margin:0}
+    .app{max-width:1050px;margin:24px auto;padding:16px}
+    header{display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:12px}
+    .logo{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#a29bfe,#81ecec);display:grid;place-items:center;box-shadow:var(--shadow);font-size:32px}
+    h1{margin:0;font-size:clamp(22px,3.5vw,36px);line-height:1.1}
+    .subtitle{color:var(--muted);font-size:14px;margin-top:4px}
+    .grid{margin-top:18px;display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:1000px){.grid{grid-template-columns:300px 1fr}}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .playlist h2,.player h2{margin:0 0 12px;font-size:18px;color:var(--primary)}
+    .rhyme-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;cursor:pointer;border:2px solid transparent;transition:.2s}
+    .rhyme-item:hover{background:#fafafa}
+    .rhyme-item.active{border-color:var(--accent);background:linear-gradient(0deg,#f2fff9,#fff)}
+    .thumb{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:26px;background:#f7f7ff}
+    .rhyme-title{font-weight:700}
+    .rhyme-lines{font-size:12px;color:var(--muted)}
+    .title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .tag{background:#eef8ff;color:#0077b6;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .board{margin-top:12px;border:3px dashed #ffd6a5;border-radius:16px;padding:14px;background:#fffdf7;display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:780px){.board{grid-template-columns:280px 1fr}}
+    .pic-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:28px}
+    .lyrics{font-size:clamp(16px,2.2vw,20px);line-height:1.7;word-spacing:3px}
+    .lyrics .line{display:block;margin:6px 0;padding:2px 4px;border-radius:8px;transition:background .12s}
+    .lyrics .line.active{background:#fff2d7;outline:2px solid #ffe3aa}
+    .word{display:inline-block;padding:1px 3px;border-radius:6px;transition:background .12s,transform .12s}
+    .word.active{background:#e9f7ef;outline:2px solid #b2f0d9;transform:translateY(-1px)}
+    .controls{margin-top:14px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+    button,select,.toggle{font-size:16px;background:var(--card);border-radius:14px;border:2px solid #eaeaea;padding:12px;cursor:pointer;transition:.15s;box-shadow:var(--shadow)}
+    button:hover,select:hover{transform:translateY(-1px)}
+    button.primary{background:linear-gradient(135deg,#6c5ce7,#00b894);color:#fff;border:none;font-weight:800}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    .toggle{display:inline-flex;align-items:center;gap:8px;user-select:none}
+    .toggle input{transform:scale(1.2)}
+    .progress{margin-top:10px;height:10px;background:#f0f0f0;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,#00b894,#6c5ce7);transition:width .1s}
+    .hint{margin-top:8px;color:var(--muted);font-size:13px}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:12px}
+    .tamil{margin-top:8px;padding:10px;border-radius:12px;background:#f6fff7;border:1px solid #e3f7e8;font-size:15px}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:#eef0ff;color:#333;border:1px solid #dfe3ff}
+    .warn{background:#fff0f0;border-color:#ffdcdc}
 
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--bg) 0%, #111827 100%);
-      color: var(--text);
+    /* Teacher Cat */
+    .cat-panel{position:relative;background:#fff;border:2px solid #ffe7b8;border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+    .cat-svg{width:100%;max-width:240px;margin:auto;display:block}
+    .mouth{transform-origin:50% 50%}
+    .talking .mouth{animation:meow .35s infinite}
+    @keyframes meow{
+      0%{transform:scaleY(0.6)}
+      50%{transform:scaleY(1.3)}
+      100%{transform:scaleY(0.6)}
     }
-
-    header {
-      padding: 2.5rem 1rem 1rem;
-      text-align: center;
+    .bubble{
+      position:absolute;left:70%;top:4px;min-width:160px;max-width:300px;
+      background:#ffffff;border:2px solid #cdefff;border-radius:14px;padding:10px 12px;
+      box-shadow:var(--shadow);font-size:15px
     }
-    header h1 {
-      margin: 0 0 .5rem;
-      font-size: clamp(1.5rem, 2vw + 1rem, 2.2rem);
-      letter-spacing: .3px;
+    .bubble:after{
+      content:"";position:absolute;left:-10px;top:18px;border-width:10px;border-style:solid;
+      border-color:transparent #cdefff transparent transparent
     }
-    header p {
-      margin: 0 auto;
-      max-width: 900px;
-      color: var(--muted);
-      line-height: 1.55;
+    .bubble:before{
+      content:"";position:absolute;left:-12px;top:18px;border-width:12px;border-style:solid;
+      border-color:transparent #ffffff transparent transparent
     }
-
-    .toolbar {
-      margin: 1.25rem auto 2rem;
-      max-width: 960px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .75rem;
-      padding: 0 1rem;
-    }
-
-    .search {
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      background: var(--panel);
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      padding: .65rem .9rem;
-    }
-    .search i { color: var(--muted); }
-    .search input {
-      flex: 1;
-      background: transparent;
-      border: 0;
-      outline: 0;
-      color: var(--text);
-      font-size: 1rem;
-    }
-    .chips {
-      display: flex; flex-wrap: wrap; gap: .5rem;
-    }
-    .chip {
-      background: rgba(14,165,233,.15);
-      color: #e0f2fe;
-      border: 1px solid rgba(14,165,233,.35);
-      padding: .35rem .6rem;
-      border-radius: 999px;
-      font-size: .85rem;
-      cursor: pointer;
-      user-select: none;
-    }
-    .chip:hover { filter: brightness(1.1); }
-
-    .grid {
-      max-width: 1200px;
-      margin: 0 auto 4rem;
-      padding: 0 1rem;
-      display: grid;
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-      gap: 1rem;
-    }
-    @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 1200px){ .grid { grid-template-columns: repeat(4, 1fr); } }
-
-    .card {
-      background: linear-gradient(180deg, var(--card) 0%, #111827 100%);
-      border: 1px solid #263244;
-      border-radius: 14px;
-      padding: 1rem;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: .6rem;
-      transition: transform .15s ease, background .2s ease, border-color .2s ease;
-      min-height: 160px;
-    }
-    .card:hover {
-      transform: translateY(-2px);
-      background: linear-gradient(180deg, var(--card-hover) 0%, #0f172a 100%);
-      border-color: #3a4b62;
-    }
-    .card .brand {
-      display: flex; align-items: center; gap: .6rem;
-      font-weight: 600;
-      font-size: 1.05rem;
-    }
-    .card .brand i {
-      width: 34px; height: 34px;
-      display: grid; place-items: center;
-      background: rgba(34,197,94,.15);
-      color: var(--brand);
-      border-radius: 9px;
-    }
-    .card p {
-      margin: 0; color: var(--muted); line-height: 1.45; font-size: .95rem;
-    }
-    .card .meta {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: .25rem; color: #a7f3d0; font-size: .82rem;
-    }
-    .card a.btn {
-      display: inline-flex; align-items: center; gap: .5rem;
-      margin-top: .6rem;
-      color: #052e16; background: #34d399;
-      border: 1px solid #22c55e;
-      border-radius: 10px; padding: .5rem .75rem; text-decoration: none;
-      font-weight: 600;
-    }
-    .card a.btn:hover { filter: brightness(1.05); }
-    footer {
-      text-align: center; color: var(--muted); padding: 2rem 1rem 3rem;
-      border-top: 1px dashed #263244;
-    }
-    .note {
-      max-width: 960px; margin: 0 auto; line-height: 1.55;
-    }
-    .hidden { display: none !important; }
+    .bubble .small{display:block;color:#4a4a4a;font-size:12px;margin-top:4px}
+    .bubble.pulse{animation:bump .35s ease}
+    @keyframes bump{0%{transform:scale(0.98)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+    .cat-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .mini{font-size:13px;padding:8px 10px;border-radius:12px}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Explore Top Job Search Portals</h1>
-    <p>
-      Quick access to leading global and India‑focused job sites. Use the search box
-      to filter by portal name, focus (e.g., <em>tech</em>, <em>startup</em>), or region.
-    </p>
+<div class="app">
+  <header aria-label="LKG Rhymes Player">
+    <div class="logo" aria-hidden="true">🎵</div>
+    <div>
+      <h1>LKG Rhymes – Teacher Cat 🐱</h1>
+      <div class="subtitle">Cat teaches each line • Recorded audio or TTS • Click to repeat</div>
+    </div>
   </header>
 
-  <section class="toolbar">
-    <div class="search" role="search">
-      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-      <input id="filter" type="search" placeholder="Search portals (e.g., tech, India, remote, startup)..." />
-    </div>
-    <div class="chips" aria-label="Quick filters">
-      <span class="chip" data-q="global">Global</span>
-      <span class="chip" data-q="india">India</span>
-      <span class="chip" data-q="tech">Tech</span>
-      <span class="chip" data-q="startup">Startup</span>
-      <span class="chip" data-q="remote">Remote</span>
-    </div>
-  </section>
+  <main class="grid" id="app">
+    <!-- Playlist -->
+    <section class="card playlist" aria-label="Rhyme List">
+      <h2>Rhymes</h2>
+      <div id="playlist"></div>
+    </section>
 
-  <main class="grid" id="portalGrid" aria-live="polite">
-    <!-- GLOBAL -->
-    <article class="card" data-tags="global general remote">
-      <div class="brand"><i class="fa-solid fa-briefcase"></i>LinkedIn Jobs</div>
-      <p>Global professional network with powerful job search, alerts, and Easy Apply.</p>
-      <div class="meta"><span>Global</span><span>General</span></div>
-      <a class="btn" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">
-        Visit <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-      </a>
-    </article>
+    <!-- Player -->
+    <section class="card player" aria-label="Rhyme Player">
+      <div class="title-row">
+        <h2 id="rhymeTitle">Pick a rhyme to start</h2>
+        <span class="tag" id="tagAge">LKG</span>
+        <span class="badge" id="modeBadge">Mode: TTS</span>
+      </div>
 
-    <article class="card" data-tags="global general remote">
-      <div class="brand"><i class="fa-solid fa-briefcase"></i>Indeed</div>
-      <p>Massive global aggregator with company reviews and salary insights.</p>
-      <div class="meta"><span>Global</span><span>General</span></div>
-      <a class="btn" href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+      <div class="board">
+        <!-- Teacher Cat -->
+        <aside class="cat-panel" id="catPanel" aria-label="Teacher Cat">
+          <svg class="cat-svg" viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <linearGradient id="fur" x1="0" x2="1">
+                <stop offset="0%" stop-color="#ffe4b5"/>
+                <stop offset="100%" stop-color="#ffd39b"/>
+              </linearGradient>
+            </defs>
+            <!-- Ears -->
+            <path d="M45 65 L25 25 L70 50 Z" fill="#ffcf91" stroke="#e3a76a" stroke-width="2"/>
+            <path d="M155 65 L175 25 L130 50 Z" fill="#ffcf91" stroke="#e3a76a" stroke-width="2"/>
+            <!-- Head -->
+            <circle cx="100" cy="100" r="70" fill="url(#fur)" stroke="#e3a76a" stroke-width="2"/>
+            <!-- Eyes -->
+            <circle cx="75" cy="95" r="8" fill="#333"/>
+            <circle cx="125" cy="95" r="8" fill="#333"/>
+            <!-- Nose -->
+            <polygon points="100,110 95,118 105,118" fill="#ff8fa3"/>
+            <!-- Whiskers -->
+            <line x1="55" y1="115" x2="85" y2="115" stroke="#8b6b4a" stroke-width="2"/>
+            <line x1="55" y1="122" x2="85" y2="120" stroke="#8b6b4a" stroke-width="2"/>
+            <line x1="55" y1="108" x2="85" y2="110" stroke="#8b6b4a" stroke-width="2"/>
+            <line x1="145" y1="115" x2="115" y2="115" stroke="#8b6b4a" stroke-width="2"/>
+            <line x1="145" y1="122" x2="115" y2="120" stroke="#8b6b4a" stroke-width="2"/>
+            <line x1="145" y1="108" x2="115" y2="110" stroke="#8b6b4a" stroke-width="2"/>
+            <!-- Mouth -->
+            <ellipse class="mouth" cx="100" cy="130" rx="10" ry="6" fill="#cc6b7a"/>
+          </svg>
 
-    <article class="card" data-tags="global general salary reviews">
-      <div class="brand"><i class="fa-solid fa-chart-line"></i>Glassdoor</div>
-      <p>Company reviews, salaries, interview tips, and job listings worldwide.</p>
-      <div class="meta"><span>Global</span><span>Insights</span></div>
-      <a class="btn" href="https://www.glassdoor.com/Job/index.htm" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+          <div class="bubble" id="catBubble">
+            👋 Meow! Pick a rhyme to start.
+            <span class="small" id="bubbleHint">Tip: Press ▶️ Play</span>
+          </div>
 
-    <article class="card" data-tags="global general resume">
-      <div class="brand"><i class="fa-solid fa-file-lines"></i>ZipRecruiter</div>
-      <p>Smart matching and one‑click apply across a large partner network.</p>
-      <div class="meta"><span>Global</span><span>General</span></div>
-      <a class="btn" href="https://www.ziprecruiter.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+          <div class="cat-tools">
+            <label class="toggle"><input type="checkbox" id="chkCat" checked/> Teacher Cat On</label>
+            <label class="toggle"><input type="checkbox" id="chkCallResponse"/> Call & Response</label>
+            <label class="toggle" title="Higher pitch = cuter cat"><input type="checkbox" id="chkCatPitch" checked/> Cat Voice Pitch</label>
+            <button class="mini" id="btnRepeatLine">🔁 Repeat after Cat</button>
+          </div>
+        </aside>
 
-    <!-- TECH / SPECIALIZED -->
-    <article class="card" data-tags="tech global developer">
-      <div class="brand"><i class="fa-solid fa-code"></i>Dice</div>
-      <p>Technology‑focused roles for developers, data, cloud, and security.</p>
-      <div class="meta"><span>Tech</span><span>Global</span></div>
-      <a class="btn" href="https://www.dice.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+        <!-- Content -->
+        <div>
+          <div class="pic-row" id="picRow" aria-hidden="true">⭐ 🌙 👶</div>
+          <div class="lyrics" id="lyrics" aria-live="polite"></div>
 
-    <article class="card" data-tags="startup tech global">
-      <div class="brand"><i class="fa-solid fa-rocket"></i>Wellfound (AngelList Talent)</div>
-      <p>Startup jobs worldwide with equity details and remote options.</p>
-      <div class="meta"><span>Startup</span><span>Tech</span></div>
-      <a class="btn" href="https://wellfound.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+          <div class="tamil" id="tamilBox" hidden>
+            <strong>தமிழ் பொருள்:</strong>
+            <div id="tamilText">—</div>
+          </div>
+        </div>
+      </div>
 
-    <article class="card" data-tags="tech global hiring platform">
-      <div class="brand"><i class="fa-solid fa-handshake-angle"></i>Hired</div>
-      <p>Marketplace for software, data, and devops roles with transparent pay ranges.</p>
-      <div class="meta"><span>Tech</span><span>Global</span></div>
-      <a class="btn" href="https://hired.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+      <!-- Hidden audio element for recorded narration -->
+      <audio id="audio" preload="metadata"></audio>
 
-    <article class="card" data-tags="remote global tech non-tech">
-      <div class="brand"><i class="fa-solid fa-house-laptop"></i>Remote.co</div>
-      <p>Curated remote jobs across tech and business functions.</p>
-      <div class="meta"><span>Global</span><span>Remote</span></div>
-      <a class="btn" href="https://remote.co/remote-jobs/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+      <div class="controls">
+        <button id="btnPrev" title="Previous">⏮️ Prev</button>
+        <button id="btnPlay" class="primary" title="Play/Pause">▶️ Play</button>
+        <button id="btnNext" title="Next">⏭️ Next</button>
+        <select id="selVoice" title="Voice (TTS)"></select>
+        <select id="selRate" title="Speed">
+          <option value="0.9">Speed: 0.9×</option>
+          <option value="1" selected>Speed: 1.0×</option>
+          <option value="1.2">Speed: 1.2×</option>
+          <option value="1.4">Speed: 1.4×</option>
+        </select>
+        <label class="toggle" title="Use recorded audio if available">
+          <input type="checkbox" id="chkUseAudio"/>
+          Use Recorded Audio
+        </label>
+        <label class="toggle"><input type="checkbox" id="chkTamil"/> Show Tamil meaning</label>
+      </div>
 
-    <!-- INDIA-FOCUSED -->
-    <article class="card" data-tags="india general">
-      <div class="brand"><i class="fa-solid fa-flag"></i>Naukri</div>
-      <p>India’s largest job portal with recruiter reach and resume database.</p>
-      <div class="meta"><span>India</span><span>General</span></div>
-      <a class="btn" href="https://www.naukri.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+      <div class="row">
+        <label class="toggle"><input type="checkbox" id="chkAutoplay"/> Autoplay next</label>
+        <label class="toggle"><input type="checkbox" id="chkLoop"/> Loop</label>
+        <button id="btnRestart">🔁 Restart</button>
+        <button id="btnBigText">🔎 Big Text</button>
+      </div>
 
-    <article class="card" data-tags="india general">
-      <div class="brand"><i class="fa-solid fa-flag"></i>Shine</div>
-      <p>Indian job listings with career guidance and recruiter services.</p>
-      <div class="meta"><span>India</span><span>General</span></div>
-      <a class="btn" href="https://www.shine.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+      <div class="tools">
+        <label class="toggle" title="Mark line start times while audio plays">
+          <input type="checkbox" id="chkTiming"/> 🎯 Timing Mode
+        </label>
+        <button id="btnCopyTiming" title="Copy line timing JSON" disabled>📋 Copy Timings</button>
+        <button id="btnClearTiming" title="Clear Timings" disabled>🧹 Clear Timings</button>
+        <span class="badge warn">In Timing Mode, click a line exactly when it starts to capture timestamps.</span>
+      </div>
 
-    <article class="card" data-tags="india general">
-      <div class="brand"><i class="fa-solid fa-flag"></i>TimesJobs</div>
-      <p>Times Group portal covering IT, manufacturing, BFSI, and more.</p>
-      <div class="meta"><span>India</span><span>General</span></div>
-      <a class="btn" href="https://www.timesjobs.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
-
-    <article class="card" data-tags="india general">
-      <div class="brand"><i class="fa-solid fa-flag"></i>Monster India</div>
-      <p>India arm of Monster with roles across levels and locations.</p>
-      <div class="meta"><span>India</span><span>General</span></div>
-      <a class="btn" href="https://www.foundit.in/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
-
-    <article class="card" data-tags="india fresher campus">
-      <div class="brand"><i class="fa-solid fa-graduation-cap"></i>Freshersworld</div>
-      <p>Entry‑level and campus jobs across India with exam and skills resources.</p>
-      <div class="meta"><span>India</span><span>Fresher</span></div>
-      <a class="btn" href="https://www.freshersworld.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
-
-    <!-- OTHER GLOBAL OPTIONS -->
-    <article class="card" data-tags="global general">
-      <div class="brand"><i class="fa-solid fa-briefcase"></i>CareerBuilder</div>
-      <p>Established job board with resume tools and market insights.</p>
-      <div class="meta"><span>Global</span><span>General</span></div>
-      <a class="btn" href="https://www.careerbuilder.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
-
-    <article class="card" data-tags="global startup tech design">
-      <div class="brand"><i class="fa-solid fa-lightbulb"></i>Startup.jobs</div>
-      <p>Curated opportunities at startups in product, engineering, and design.</p>
-      <div class="meta"><span>Startup</span><span>Global</span></div>
-      <a class="btn" href="https://startup.jobs/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
-
-    <article class="card" data-tags="global remote tech non-tech">
-      <div class="brand"><i class="fa-solid fa-globe"></i>We Work Remotely</div>
-      <p>One of the largest remote‑only job boards across many functions.</p>
-      <div class="meta"><span>Global</span><span>Remote</span></div>
-      <a class="btn" href="https://weworkremotely.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
-
-    <article class="card" data-tags="global freelance gig">
-      <div class="brand"><i class="fa-solid fa-users-gear"></i>Upwork (Freelance)</div>
-      <p>Freelance marketplace for contract and project‑based work.</p>
-      <div class="meta"><span>Global</span><span>Freelance</span></div>
-      <a class="btn" href="https://www.upwork.com/" target="_blank" rel="noopener">Visit
-        <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    </article>
+      <div class="progress" aria-label="Progress"><div class="bar" id="bar"></div></div>
+      <div class="hint">Click a line to replay just that line (seeks if audio timing is available; otherwise TTS reads it).</div>
+    </section>
   </main>
 
   <footer>
-    <div class="note">
-      <strong>Note:</strong> The list is provided for convenience; always verify job postings and
-      company details independently. You can customize this page by adding your
-      preferred portals or grouping by region/industry.
-    </div>
+    Made for little learners 💛 | Recorded audio (if provided) or browser voice (TTS)
   </footer>
+</div>
 
-  <script>
-    // Simple text filter + chip helpers
-    const input = document.getElementById('filter');
-    const grid  = document.getElementById('portalGrid');
-    const cards = Array.from(grid.querySelectorAll('.card'));
-    const chips = Array.from(document.querySelectorAll('.chip'));
-
-    function applyFilter(q) {
-      const term = (q || '').trim().toLowerCase();
-      cards.forEach(c => {
-        const tags = (c.getAttribute('data-tags') || '').toLowerCase();
-        const text = (c.innerText || '').toLowerCase();
-        const match = !term || tags.includes(term) || text.includes(term);
-        c.classList.toggle('hidden', !match);
-      });
-    }
-
-    input.addEventListener('input', (e) => applyFilter(e.target.value));
-
-    chips.forEach(ch => ch.addEventListener('click', () => {
-      const val = ch.getAttribute('data-q') || '';
-      input.value = val;
-      applyFilter(val);
-      input.focus();
-    }));
-  </script>
-</body>
-</html>
+<script>
+/** -----------------------
+ *  RHYMES DATA (Edit/Add here)
+ *  -----------------------
+ *  Fields:
+ *   - id, title, emoji (array), tamil (optional)
+ *   - lines: array of strings
+ *   - audioSrc: OPTIONAL path to your recorded MP3/WAV
+ *   - lineTimes: OPTIONAL array of seconds (start of each line). Use Timing Mode to capture these.
+ */
+const RHYMES = [
+  {
+    id: "twinkle",
+    title: "Twinkle, Twinkle, Little Star",
+    emoji: ["⭐","🌙","👶"],
+    tamil: "சின்ன சின்ன நட்சத்திரமே, நீ எவ்வளவு அழகாக ஜொலிக்கிறாய்! வானத்தில் வைரமாகத் தெரிகிறாய்.",
+    lines: [
+      "Twinkle, twinkle, little star,",
+      "How I wonder what you are!",
+      "Up above the world so high,",
+      "Like a diamond in the sky.",
+      "Twinkle, twinkle, little star,",
+      "How I wonder what you are!"
+    ],
+    audioSrc: "audio/twinkle.mp3",
+    lineTimes: [0.00, 2.80, 5.30, 7.80, 10.30, 13.10]
+  },
+  {
+    id: "baa",
+    title: "Baa, Baa, Black Sheep",
+    emoji: ["🐑","🧺","👦"],
+    tamil: "கருப்பு ஆட்டுக்குட்டி கம்பளி கொடுக்கிறதா? மூட்டையோடு மூன்று பேருக்கு பகிர்ந்தளிக்கிறது.",
+    lines: [
+      "Baa, baa, black sheep, have you any wool?",
+      "Yes sir, yes sir, three bags full;",
+      "One for the master, and one for the dame,",
+      "And one for the little boy who lives down the lane."
+    ],
+    audioSrc: "audio/baa.mp3",
+    lineTimes: [0.00, 2.80, 5.60, 8.60]
+  },
+  {
+    id: "humpty",
+    title: "Humpty Dumpty",
+    emoji: ["🥚","🧱","🐎"],
+    tamil: "ஹம்ப்டி டம்ப்டி சுவரில் அமர்ந்திருந்தான்; கீழே விழுந்தபின் யாராலும் அவனை மீண்டும் ஒன்றிணைக்க முடியவில்லை.",
+    lines: [
+      "Humpty Dumpty sat on a wall,",
+      "Humpty Dumpty had a great fall;",
+      "All the king's horses and all the
